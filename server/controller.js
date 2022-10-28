@@ -27,21 +27,25 @@ module.exports = {
         const { name, rating, countryId } = req.body
 
         sequelize.query(`
-            INSERT INTO cities (name, rating, country_id)
+            INSERT INTO cities (city_name, rating, country_id)
             VALUES ('${name}', ${rating}, ${countryId})
         `)
-        .then((DbRes) => res.status(200).send(DbRes))
+        .then((DbRes) => {
+            // console.log(countryId)
+            res.status(200).send(DbRes)
+        })
         .catch((err) => res.status(500).send(err))
     },
 
     getCities: (req, res) => {
         sequelize.query(`
-        SELECT city.city_id, city.name, country.country_id, country.name FROM cities AS city
+        SELECT city.city_id, city.city_name, city.rating, country.country_id, country.country_name FROM cities AS city
         JOIN countries AS country 
         ON city.country_id = country.country_id
+        ORDER BY rating DESC;
         `)
         .then((dbRes) => {
-            // console.log(dbRes[0])
+            console.log(dbRes[0])
             res.status(200).send(dbRes[0])
         })
         .catch(err => res.status(500).send(err))
@@ -53,27 +57,30 @@ module.exports = {
         sequelize.query(`
         DELETE FROM cities WHERE city_id = ${id}
         `)
+        .then((DbRes) => {
+            res.status(200).send()
+        })
     },
 
     seed: (req, res) => {
         sequelize.query(`
-            drop table if exists cities;
+        drop table if exists cities;
             drop table if exists countries;
 
             create table countries (
                 country_id serial primary key, 
-                name varchar
+                country_name varchar
             );
 
            
             CREATE TABLE cities (
                 city_id SERIAL PRIMARY KEY,
-                name VARCHAR(25) NOT NULL,
+                city_name VARCHAR(25) NOT NULL,
                 rating INT NOT NULL,
                 country_id INT NOT NULL REFERENCES countries(country_id)
             );
 
-            insert into countries (name)
+            insert into countries (country_name)
             values ('Afghanistan'),
             ('Albania'),
             ('Algeria'),
@@ -269,6 +276,11 @@ module.exports = {
             ('Yemen'),
             ('Zambia'),
             ('Zimbabwe');
+
+INSERT INTO cities (city_name, rating, country_id)
+            VALUES ('strangleton', 3, 5),
+            ('coldboiopolis', 2, 67),
+            ('New Sacramento', 5, 2);
         `).then(() => {
             console.log('DB seeded!')
             res.sendStatus(200)
